@@ -15,6 +15,7 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/decred/dcrd/rpcclient"
 	"github.com/decred/dcrwallet/errors"
+	"github.com/decred/dcrd/dcrtest"
 )
 
 func mineBlock(t *testing.T, r *Harness) {
@@ -75,7 +76,7 @@ func syncWalletTo(rpcClient *rpcclient.Client, desiredHeight int64) (int64, erro
 	var count int64 = 0
 	var err error = nil
 	for count != desiredHeight {
-		Sleep(1000)
+		dcrtest.Sleep(1000)
 		count, err = rpcClient.GetBlockCount()
 		if err != nil {
 			return -1, err
@@ -106,7 +107,7 @@ func getMiningAddr(walletClient *rpcclient.Client) dcrutil.Address {
 		break
 	}
 	if miningAddr == nil {
-		ReportTestSetupMalfunction(errors.Errorf(
+		dcrtest.ReportTestSetupMalfunction(errors.Errorf(
 			"RPC not up for mining addr"))
 	}
 	return miningAddr

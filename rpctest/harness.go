@@ -13,6 +13,7 @@ import (
 	"github.com/decred/dcrd/chaincfg"
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/decred/dcrd/rpcclient"
+	"github.com/decred/dcrd/dcrtest"
 )
 
 // Harness provides a unified platform for creating RPC-driven integration
@@ -54,7 +55,7 @@ func NewHarness(config *HarnessConfig) *Harness {
 		rpcPass:         "pass",
 		appDir:          filepath.Join(config.WorkingDir, "dcrd"),
 		endpoint:        "ws",
-		externalProcess: &ExternalProcess{CommandName: "dcrd"},
+		externalProcess: &dcrtest.ExternalProcess{CommandName: "dcrd"},
 		RPCClient:       &RPCConnection{MaxConnRetries: 20},
 	}
 
@@ -65,7 +66,7 @@ func NewHarness(config *HarnessConfig) *Harness {
 		rpcPass:         "pass",
 		appDir:          filepath.Join(config.WorkingDir, "dcrwallet"),
 		endpoint:        "ws",
-		externalProcess: &ExternalProcess{CommandName: "dcrwallet"},
+		externalProcess: &dcrtest.ExternalProcess{CommandName: "dcrwallet"},
 		RPCClient:       &RPCConnection{MaxConnRetries: 20},
 	}
 

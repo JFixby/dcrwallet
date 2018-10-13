@@ -7,6 +7,7 @@ import (
 
 	"github.com/decred/dcrd/chaincfg"
 	"github.com/decred/dcrwallet/errors"
+	"github.com/decred/dcrd/dcrtest"
 )
 
 // ChainWithMatureOutputsSpawner initializes the primary mining node
@@ -81,8 +82,8 @@ func (testSetup *ChainWithMatureOutputsSpawner) NewInstance(harnessName string) 
 	{
 		harness.MiningAddress = getMiningAddr(harness.WalletRPCClient())
 
-		assertNotNil("MiningAddress", harness.MiningAddress)
-		assertNotEmpty("MiningAddress", harness.MiningAddress.String())
+		dcrtest.AssertNotNil("MiningAddress", harness.MiningAddress)
+		dcrtest.AssertNotEmpty("MiningAddress", harness.MiningAddress.String())
 
 		fmt.Println("Mining address: " + harness.MiningAddress.String())
 	}
@@ -113,7 +114,7 @@ func (testSetup *ChainWithMatureOutputsSpawner) NewInstance(harnessName string) 
 
 	// sometimes wallet hangs on RPC calls made immediately after the launch,
 	// wait 5 seconds before using it
-	Sleep(5000)
+	dcrtest.Sleep(5000)
 	// ToDo: Figure out why Wallet RPC hangs. Race condition?
 
 	fmt.Println("Harness[" + cfg.Name + "] is ready")
@@ -160,7 +161,7 @@ func launchHarnessSequence(harness *Harness, args *launchArguments) {
 
 	DcrdServer.Start(args.DcrdExtraArgs, args.DebugDCRDOutput)
 	// DCRD RPC instance will create a cert file when it is ready for incoming calls
-	WaitForFile(DcrdServer.CertFile(), 7)
+	dcrtest.WaitForFile(DcrdServer.CertFile(), 7)
 
 	fmt.Println("Connect to DCRD RPC...")
 	{
@@ -172,12 +173,12 @@ func launchHarnessSequence(harness *Harness, args *launchArguments) {
 	if args.CreateTestChain {
 		numToGenerate := uint32(cfg.ActiveNet.CoinbaseMaturity) + args.NumMatureOutputs
 		err := generateTestChain(numToGenerate, harness.DcrdRPCClient())
-		CheckTestSetupMalfunction(err)
+		dcrtest.CheckTestSetupMalfunction(err)
 	}
 
 	WalletServer.Start(DcrdServer.CertFile(), args.WalletExtraArguments, args.DebugWalletOutput)
 	// Wallet RPC instance will create a cert file when it is ready for incoming calls
-	WaitForFile(WalletServer.CertFile(), 90)
+	dcrtest.WaitForFile(WalletServer.CertFile(), 90)
 
 	fmt.Println("Connect to Wallet RPC...")
 	{
@@ -207,10 +208,10 @@ func shutdownHarnessSequence(harness *Harness) {
 	DcrdServer.Stop()
 
 	// Delete files, RPC servers will recreate them on the next launch sequence
-	DeleteFile(DcrdServer.CertFile())
-	DeleteFile(DcrdServer.KeyFile())
-	DeleteFile(WalletServer.CertFile())
-	DeleteFile(WalletServer.KeyFile())
+	dcrtest.DeleteFile(DcrdServer.CertFile())
+	dcrtest.DeleteFile(DcrdServer.KeyFile())
+	dcrtest.DeleteFile(WalletServer.CertFile())
+	dcrtest.DeleteFile(WalletServer.KeyFile())
 }
 
 // networkFor resolves network argument for dcrd and wallet console commands
@@ -227,7 +228,7 @@ func networkFor(net *chaincfg.Params) string {
 	}
 
 	// should never reach this line, report violation
-	ReportTestSetupMalfunction(errors.Errorf("Unknown network: %v", net))
+	dcrtest.ReportTestSetupMalfunction(errors.Errorf("Unknown network: %v", net))
 	return ""
 }
 
@@ -237,7 +238,7 @@ func syncWalletHarnessTo(harness *Harness, desiredHeight int64) {
 
 	rpcClient := harness.WalletRPCClient()
 	count, err := syncWalletTo(rpcClient, desiredHeight)
-	CheckTestSetupMalfunction(err)
+	dcrtest.CheckTestSetupMalfunction(err)
 	fmt.Println("Wallet sync complete, height: " + strconv.FormatInt(count, 10))
 }
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/decred/dcrwallet/errors"
 	"github.com/decred/dcrd/rpcclient"
+	"github.com/decred/dcrd/dcrtest"
 )
 
 type WalletTestServer struct {
@@ -21,7 +22,7 @@ type WalletTestServer struct {
 	debugLevel string
 	endpoint   string
 
-	externalProcess *ExternalProcess
+	externalProcess *dcrtest.ExternalProcess
 
 	RPCClient *RPCConnection
 }
@@ -31,7 +32,7 @@ func (n *WalletTestServer) RPCConnectionConfig() rpcclient.ConnConfig {
 	file := n.CertFile()
 	fmt.Println("reading: " + file)
 	cert, err := ioutil.ReadFile(file)
-	CheckTestSetupMalfunction(err)
+	dcrtest.CheckTestSetupMalfunction(err)
 
 	return rpcclient.ConnConfig{
 		Host:                 n.rpcListen,
@@ -52,30 +53,32 @@ func (server *WalletTestServer) KeyFile() string {
 }
 
 func (server *WalletTestServer) IsRunning() bool {
-	return server.externalProcess.isRunning
+	return server.externalProcess.IsRunning()
 }
 
 func (n *WalletTestServer) Start(dcrdCertificateFile string, extraArguments map[string]interface{}, debugOutput bool) {
 	if n.IsRunning() {
-		ReportTestSetupMalfunction(errors.Errorf("WalletTestServer is already running"))
+		dcrtest.ReportTestSetupMalfunction(errors.Errorf("WalletTestServer is already running"))
 	}
 	fmt.Println("Start Wallet process...")
-	MakeDirs(n.appDir)
+	dcrtest.MakeDirs(n.appDir)
 
 	dcrwalletExe := "dcrwallet"
 	n.externalProcess.CommandName = dcrwalletExe
-	n.externalProcess.Arguments = n.cookArguments(dcrdCertificateFile, extraArguments)
+	n.externalProcess.Arguments = ArgumentsToStringArray(
+		n.cookArguments(dcrdCertificateFile, extraArguments),
+	)
 	n.externalProcess.Launch(debugOutput)
 }
 
 // Stop interrupts the running dcrwallet process.
 func (n *WalletTestServer) Stop() {
 	if !n.IsRunning() {
-		ReportTestSetupMalfunction(errors.Errorf("WalletTestServer is not running"))
+		dcrtest.ReportTestSetupMalfunction(errors.Errorf("WalletTestServer is not running"))
 	}
 	fmt.Println("Stop Wallet process...")
 	err := n.externalProcess.Stop()
-	CheckTestSetupMalfunction(err)
+	dcrtest.CheckTestSetupMalfunction(err)
 }
 
 func (n *WalletTestServer) cookArguments(dcrdCertificateFile string, extraArguments map[string]interface{}) map[string]interface{} {

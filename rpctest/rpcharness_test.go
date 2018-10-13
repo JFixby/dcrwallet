@@ -27,6 +27,7 @@ import (
 	"github.com/decred/dcrwallet/errors"
 	"github.com/decred/dcrwallet/wallet"
 	"github.com/google/go-cmp/cmp"
+	"github.com/decred/dcrd/dcrtest"
 )
 
 type RpcTestCase func(t *testing.T)
@@ -42,7 +43,7 @@ To use this function add the following code in your test:
 
 */
 func skipTest(t *testing.T) bool {
-	return ListContainsString(skipTestsList, t.Name())
+	return dcrtest.ListContainsString(skipTestsList, t.Name())
 }
 
 // skipTestsList contains names of the tests mentioned in the testCasesToSkip
@@ -146,7 +147,7 @@ func TestMain(m *testing.M) {
 // teardown routines were properly performed.
 func verifyCorrectExit() {
 	if Pool.Size() != 0 {
-		ReportTestSetupMalfunction(
+		dcrtest.ReportTestSetupMalfunction(
 			errors.Errorf(
 				"Incorrect state: " +
 					"Pool should be disposed before exit. " +
@@ -154,11 +155,11 @@ func verifyCorrectExit() {
 			))
 	}
 
-	VerifyNoExternalProcessesLeft()
+	dcrtest.VerifyNoExternalProcessesLeft()
 
 	file := WorkingDir
-	if FileExists(file) {
-		ReportTestSetupMalfunction(
+	if dcrtest.FileExists(file) {
+		dcrtest.ReportTestSetupMalfunction(
 			errors.Errorf(
 				"Incorrect state: "+
 					"Working dir should be deleted before exit. %v",

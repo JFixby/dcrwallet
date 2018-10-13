@@ -10,6 +10,7 @@ import (
 
 	"github.com/decred/dcrwallet/errors"
 	"github.com/decred/dcrd/rpcclient"
+	"github.com/decred/dcrd/dcrtest"
 )
 
 type DcrdTestServer struct {
@@ -23,7 +24,7 @@ type DcrdTestServer struct {
 	appDir     string
 	endpoint   string
 
-	externalProcess *ExternalProcess
+	externalProcess *dcrtest.ExternalProcess
 
 	RPCClient *RPCConnection
 }
@@ -33,7 +34,7 @@ func (n *DcrdTestServer) RPCConnectionConfig() rpcclient.ConnConfig {
 	file := n.CertFile()
 	fmt.Println("reading: " + file)
 	cert, err := ioutil.ReadFile(file)
-	CheckTestSetupMalfunction(err)
+	dcrtest.CheckTestSetupMalfunction(err)
 
 	return rpcclient.ConnConfig{
 		Host:                 n.rpcListen,
@@ -55,30 +56,32 @@ func (server *DcrdTestServer) KeyFile() string {
 }
 
 func (server *DcrdTestServer) IsRunning() bool {
-	return server.externalProcess.isRunning
+	return server.externalProcess.IsRunning()
 }
 
 func (n *DcrdTestServer) Start(extraArguments map[string]interface{}, debugOutput bool) {
 	if n.IsRunning() {
-		ReportTestSetupMalfunction(errors.Errorf("DcrdTestServer is already running"))
+		dcrtest.ReportTestSetupMalfunction(errors.Errorf("DcrdTestServer is already running"))
 	}
 	fmt.Println("Start DCRD process...")
-	MakeDirs(n.appDir)
+	dcrtest.MakeDirs(n.appDir)
 
 	dcrdExe := "dcrd"
 	n.externalProcess.CommandName = dcrdExe
-	n.externalProcess.Arguments = n.cookArguments(extraArguments)
+	n.externalProcess.Arguments = ArgumentsToStringArray(
+		n.cookArguments(extraArguments),
+	)
 	n.externalProcess.Launch(debugOutput)
 }
 
 // Stop interrupts the running dcrd process.
 func (n *DcrdTestServer) Stop() {
 	if !n.IsRunning() {
-		ReportTestSetupMalfunction(errors.Errorf("DcrdTestServer is not running"))
+		dcrtest.ReportTestSetupMalfunction(errors.Errorf("DcrdTestServer is not running"))
 	}
 	fmt.Println("Stop DCRD process...")
 	err := n.externalProcess.Stop()
-	CheckTestSetupMalfunction(err)
+	dcrtest.CheckTestSetupMalfunction(err)
 }
 
 func (n *DcrdTestServer) cookArguments(extraArguments map[string]interface{}) map[string]interface{} {
